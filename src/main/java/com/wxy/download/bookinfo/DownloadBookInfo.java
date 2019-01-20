@@ -10,6 +10,7 @@ import javax.net.ssl.TrustManager;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.Map;
 
 import static sun.net.www.protocol.http.HttpURLConnection.userAgent;
@@ -25,6 +26,7 @@ public class DownloadBookInfo {
         JSONObject jsonObject1 = new JSONObject(httpsRequest);
        // JSONObject jsonObject = new JSONObject().getJSONObject(httpsRequest);
         JSONArray collecObj = (JSONArray)jsonObject1.get("collections");
+
         for (int i = 0; i < collecObj.length(); i++) {
         //    if (collecObj.get(i))
             JSONObject o = (JSONObject)collecObj.get(i);
@@ -32,13 +34,25 @@ public class DownloadBookInfo {
             JSONObject book = (JSONObject) o.get("book");
             String title = book.getString("title");
             JSONObject images = (JSONObject)book.get("images");
-            String imageUrl = images.getString("small");
-            System.out.println("第"+ i + "本书");
-            System.out.println("status: " + status);
-            System.out.println("imageUrl: " + imageUrl);
-            System.out.println("title: " + title);
-            System.out.println();
+            String imageUrl = images.getString("medium");
+            String savePath = "C:\\Users\\Kode\\Desktop\\读书名单图片";
+            //System.out.println("第"+ i + "本书");
+            System.out.println("\t \t{");
+            System.out.println("\t \t \t \t \"status\": " + "\"" + status + "\"" + ",");
+            System.out.println("\t \t \t \t \"book\": {");
+            System.out.println("\t \t \t \t \t \t \"image\": " + "\"" + imageUrl + "\"" + ",");
+            try {
+                download(imageUrl,title+".jpg", savePath);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+//            System.out.println("imageUrl: " + imageUrl);
+            System.out.println("\t \t \t \t \t \t \"title\": " + "\"" + title + "\"");
+//            System.out.println("title: " + title);
+            System.out.println("\t \t \t \t }");
+            System.out.println("\t \t},");
         }
+        System.out.println("一共读了多少本书："+collecObj.length());
 
     }
     public static String httpsRequest(String requestUrl,String requestMethod,String outputStr){
@@ -82,6 +96,34 @@ public class DownloadBookInfo {
         return buffer.toString();
     }
 
+    public static void download(String urlString, String filename,String savePath) throws Exception {
+        // 构造URL
+        URL url = new URL(urlString);
+        // 打开连接
+        URLConnection con = url.openConnection();
+        //设置请求超时为5s
+        con.setConnectTimeout(5*1000);
+        // 输入流
+        InputStream is = con.getInputStream();
+
+        // 1K的数据缓冲
+        byte[] bs = new byte[1024];
+        // 读取到的数据长度
+        int len;
+        // 输出的文件流
+        File sf=new File(savePath);
+        if(!sf.exists()){
+            sf.mkdirs();
+        }
+        OutputStream os = new FileOutputStream(sf.getPath()+"\\"+filename);
+        // 开始读取
+        while ((len = is.read(bs)) != -1) {
+            os.write(bs, 0, len);
+        }
+        // 完毕，关闭所有链接
+        os.close();
+        is.close();
+    }
     public static String getURLContent(String urll, String a) throws Exception {
         String strURL = urll;
         URL url = new URL(strURL);
